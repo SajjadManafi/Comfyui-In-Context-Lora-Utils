@@ -18,11 +18,10 @@ RESOLUTION_CONFIG = {
     ]
 }
 
-def resize(img,resolution,interpolation=cv2.INTER_CUBIC):
-    # print(img)
-    
-    # print(resolution)
-    return cv2.resize(img,resolution, interpolation=cv2.INTER_CUBIC)
+def resize(img, resolution, interpolation=cv2.INTER_CUBIC):
+    if img is None or img.size == 0:
+        return None
+    return cv2.resize(img, resolution, interpolation=interpolation)
 
     
 def create_image_from_color(width, height, color=(255, 255, 255)):
@@ -41,18 +40,15 @@ def fit_image(image,mask=None,output_length=1536,patch_mode="auto"):
     image = image.detach().cpu().numpy()
     if mask is not None:
         mask = mask.detach().cpu().numpy()
+        if mask.size == 0:
+            mask = None
     
-    # print("np.all(mask == 0)",np.all(mask == 0))
     base_length = int(output_length /3 *2)
     half_length = int(output_length /2)
     image_height, image_width, _ = image.shape
-    # print("ori ", image_width, image_height)
-    # if image.size is None:
-    #     # convert tensor to pil image
-    #     image = Image.fromarray(np.uint8(image)).convert('RGB')
-    # image_width, image_height  = image.size
     target_width = int(half_length)
     target_height = int(base_length)
+    
     # print("patch_mode",patch_mode)
     if patch_mode == "auto":
         if image_width > image_height:
@@ -75,7 +71,7 @@ def fit_image(image,mask=None,output_length=1536,patch_mode="auto"):
             image = resize(image, (new_width,new_height))
             # print("mask",mask)
             # print("mask.shape",mask.shape)
-            if mask is not None:
+            if mask is not None and mask.size > 0:
                 mask = resize(mask, (new_width,new_height),cv2.INTER_NEAREST_EXACT)
         else:
             new_width = target_width
@@ -85,7 +81,7 @@ def fit_image(image,mask=None,output_length=1536,patch_mode="auto"):
             
             # print("mask",mask)
             # print("mask.shape",mask.shape)
-            if mask is not None:
+            if mask is not None and mask.size > 0:
                 mask = resize(mask, (new_width,new_height),cv2.INTER_NEAREST_EXACT)
             
         image_height, image_width, _ = image.shape
